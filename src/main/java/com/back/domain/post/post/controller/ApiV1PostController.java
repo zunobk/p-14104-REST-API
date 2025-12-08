@@ -75,7 +75,7 @@ public class ApiV1PostController {
 
         return new RsData<>(
                 "200-1",
-                "%d번 글이 생성되었습니다.".formatted(post.getId()),
+                "%d번 글이 작성되었습니다.".formatted(post.getId()),
                 new PostWriteResBody(
                         postService.count(),
                         new PostDto(post)
