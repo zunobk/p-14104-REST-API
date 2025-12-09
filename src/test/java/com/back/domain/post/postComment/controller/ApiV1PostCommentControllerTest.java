@@ -7,8 +7,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -53,5 +53,36 @@ public class ApiV1PostCommentControllerTest {
                 .andExpect(jsonPath("$.createDate").value(Matchers.startsWith(postComment.getCreateDate().toString().substring(0, 20))))
                 .andExpect(jsonPath("$.modifyDate").value(Matchers.startsWith(postComment.getModifyDate().toString().substring(0, 20))))
                 .andExpect(jsonPath("$.content").value(postComment.getContent()));
+    }
+
+    @Test
+    @DisplayName("댓글 다건조회")
+    void t2() throws Exception {
+        int postId = 1;
+
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/v1/posts/%d/comments".formatted(postId))
+                )
+                .andDo(print());
+
+        Post post = postService.findById(postId).get();
+        List<PostComment> comments = post.getComments();
+
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("getItems"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(comments.size()));
+
+        for (int i = 0; i < comments.size(); i++) {
+            PostComment postComment = comments.get(i);
+
+            resultActions
+                    .andExpect(jsonPath("$[%d].id".formatted(i)).value(postComment.getId()))
+                    .andExpect(jsonPath("$[%d].createDate".formatted(i)).value(Matchers.startsWith(postComment.getCreateDate().toString().substring(0, 20))))
+                    .andExpect(jsonPath("$[%d].modifyDate".formatted(i)).value(Matchers.startsWith(postComment.getModifyDate().toString().substring(0, 20))))
+                    .andExpect(jsonPath("$[%d].content".formatted(i)).value(postComment.getContent()));
+        }
     }
 }
